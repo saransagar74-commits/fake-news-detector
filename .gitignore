@@ -1,0 +1,19 @@
+# Virtual environment
+venv/
+ENV/
+env/
+
+# Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Large datasets & local models
+data/
+saved_model/
+
+# IDE configurations
+.vscode/
+.idea/
+.DS_Store

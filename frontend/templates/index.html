@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VeritasAI is an advanced NLP and machine learning platform that detects fake news, analyzes text credibility, and highlights sensationalized language in real-time.">
+    <title>VeritasAI - Machine Learning Fake News Detector</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="glass-bg-container">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h1>Veritas<span>AI</span></h1>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button class="nav-item active" id="nav-btn-detector" onclick="switchTab('detector')">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                    <span>Detector</span>
+                </button>
+                <button class="nav-item" id="nav-btn-insights" onclick="switchTab('insights')">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Model Insights</span>
+                </button>
+                <button class="nav-item" id="nav-btn-samples" onclick="switchTab('samples')">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span>Quick-Test Library</span>
+                </button>
+            </nav>
+            
+            <div class="sidebar-status-card" id="model-status-card">
+                <div class="status-indicator-dot online"></div>
+                <div class="status-details">
+                    <p class="status-label">Model Status</p>
+                    <p class="status-value" id="status-model-name">Loading...</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="app-main">
+            <!-- Header -->
+            <header class="app-header">
+                <div class="header-title">
+                    <h2 id="page-title">Credential Analyzer</h2>
+                    <p id="page-subtitle">Scan articles for misinformation using NLP & Machine Learning</p>
+                </div>
+                <div class="header-actions">
+                    <button class="action-btn theme-toggle" id="theme-toggle-btn" aria-label="Toggle dark mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Tab: Detector -->
+            <section class="tab-content active" id="tab-detector">
+                <div class="detector-grid">
+                    <!-- Control Panel (Left/Top) -->
+                    <div class="card panel-input">
+                        <div class="panel-header">
+                            <h3>Source Material</h3>
+                            <div class="input-toggles">
+                                <button class="toggle-btn active" id="mode-text-btn" onclick="setInputMode('text')">
+                                    <i class="fa-solid fa-align-left"></i> Paste Text
+                                </button>
+                                <button class="toggle-btn" id="mode-url-btn" onclick="setInputMode('url')">
+                                    <i class="fa-solid fa-link"></i> Analyze URL
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Text Input Section -->
+                        <div class="input-container" id="container-text">
+                            <textarea 
+                                id="text-input" 
+                                placeholder="Paste the news article text here (minimum 50 characters)..." 
+                                aria-label="News Article Text"
+                            ></textarea>
+                            <div class="text-meta">
+                                <span id="word-count">0 words</span>
+                                <button class="clear-btn" onclick="clearInput()">Clear</button>
+                            </div>
+                        </div>
+                        
+                        <!-- URL Input Section -->
+                        <div class="input-container hidden" id="container-url">
+                            <div class="url-input-wrapper">
+                                <i class="fa-solid fa-link input-icon"></i>
+                                <input 
+                                    type="url" 
+                                    id="url-input" 
+                                    placeholder="https://example.com/news-article-url" 
+                                    aria-label="News Article URL"
+                                >
+                            </div>
+                            <p class="url-helper-text">Our backend will fetch the article content and extract text automatically.</p>
+                        </div>
+                        
+                        <!-- Analyze Button -->
+                        <button class="primary-btn" id="analyze-btn" onclick="runAnalysis()">
+                            <span>Analyze Article</span>
+                            <i class="fa-solid fa-circle-notch fa-spin loader hidden" id="analyze-loader"></i>
+                            <i class="fa-solid fa-arrow-right icon" id="analyze-icon"></i>
+                        </button>
+                    </div>
+
+                    <!-- Results Dashboard (Right/Bottom) -->
+                    <div class="card panel-results empty" id="panel-results">
+                        <div class="empty-state" id="results-empty">
+                            <i class="fa-solid fa-circle-question"></i>
+                            <h3>No Analysis Performed</h3>
+                            <p>Enter text or a URL and click "Analyze Article" to evaluate credibility metrics.</p>
+                        </div>
+
+                        <div class="results-layout hidden" id="results-active">
+                            <div class="verdict-banner" id="verdict-card">
+                                <div class="verdict-icon" id="verdict-icon-container">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                                <div class="verdict-text-group">
+                                    <span class="verdict-tag" id="verdict-badge">REAL NEWS</span>
+                                    <h3 class="verdict-percentage" id="verdict-confidence">Confidence: 94.2%</h3>
+                                </div>
+                            </div>
+
+                            <div class="results-visuals">
+                                <!-- Credibility Meter -->
+                                <div class="credibility-meter-box">
+                                    <h4>Credibility Index</h4>
+                                    <div class="gauge-wrapper">
+                                        <svg viewBox="0 0 100 100" class="gauge">
+                                            <!-- Background circle -->
+                                            <circle cx="50" cy="50" r="40" class="gauge-bg"></circle>
+                                            <!-- Fill circle -->
+                                            <circle cx="50" cy="50" r="40" class="gauge-fill" id="gauge-fill-ring"></circle>
+                                        </svg>
+                                        <div class="gauge-text">
+                                            <span id="gauge-value">85%</span>
+                                            <span class="gauge-label" id="gauge-rating">TRUSTED</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Key Findings -->
+                                <div class="findings-box">
+                                    <h4>AI Explanation</h4>
+                                    <p class="explanation-text" id="explanation-text">
+                                        Loading analysis summary...
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="highlight-container">
+                                <div class="highlight-header">
+                                    <h4>Sensationalism Highlighter</h4>
+                                    <div class="legend">
+                                        <span class="legend-item"><span class="dot real"></span> Credible Term</span>
+                                        <span class="legend-item"><span class="dot fake"></span> Sensationalized/Fake</span>
+                                    </div>
+                                </div>
+                                <div class="highlight-box" id="highlighted-content">
+                                    <!-- Rendered tokenized blocks with colors -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: Insights -->
+            <section class="tab-content hidden" id="tab-insights">
+                <div class="insights-grid">
+                    <!-- Metrics Card -->
+                    <div class="card metrics-card">
+                        <h3>Model Evaluation Metrics</h3>
+                        <p class="section-subtitle">Trained on standard news datasets (TF-IDF Vectorizer + Logistic Regression)</p>
+                        
+                        <div class="metrics-grid">
+                            <div class="metric-box">
+                                <div class="metric-circle-wrapper">
+                                    <svg viewBox="0 0 36 36" class="metric-ring">
+                                        <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        <path class="ring-fill" id="ring-accuracy" stroke-dasharray="93, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    </svg>
+                                    <div class="metric-val" id="metric-accuracy-val">93.4%</div>
+                                </div>
+                                <div class="metric-info">
+                                    <h4>Accuracy</h4>
+                                    <p>Overall correct classification rate</p>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-box">
+                                <div class="metric-circle-wrapper">
+                                    <svg viewBox="0 0 36 36" class="metric-ring">
+                                        <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        <path class="ring-fill" id="ring-precision" stroke-dasharray="92, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    </svg>
+                                    <div class="metric-val" id="metric-precision-val">92.1%</div>
+                                </div>
+                                <div class="metric-info">
+                                    <h4>Precision</h4>
+                                    <p>Reliability of Real classifications</p>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-box">
+                                <div class="metric-circle-wrapper">
+                                    <svg viewBox="0 0 36 36" class="metric-ring">
+                                        <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        <path class="ring-fill" id="ring-recall" stroke-dasharray="94, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    </svg>
+                                    <div class="metric-val" id="metric-recall-val">94.8%</div>
+                                </div>
+                                <div class="metric-info">
+                                    <h4>Recall</h4>
+                                    <p>Proportion of Real articles detected</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="model-meta-info">
+                            <div class="meta-item">
+                                <span class="meta-label">Vocabulary Dimensions</span>
+                                <span class="meta-value" id="info-vocab-size">---</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Training Size</span>
+                                <span class="meta-value" id="info-train-samples">---</span>
+                            </div>
+                            <div class="meta-item">
+                                <button class="secondary-btn" id="retrain-btn" onclick="triggerRetrain()">
+                                    <i class="fa-solid fa-arrows-rotate"></i> Retrain Model
+                                    <i class="fa-solid fa-circle-notch fa-spin loader hidden" id="retrain-loader"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature Importance lists -->
+                    <div class="card features-card">
+                        <h3>Statistical Text Indicators</h3>
+                        <p class="section-subtitle">Words showing the strongest statistical correlation in classification</p>
+                        
+                        <div class="features-columns">
+                            <!-- Real Indicators -->
+                            <div class="feature-col">
+                                <h4 class="col-title real-header"><i class="fa-solid fa-circle-check"></i> Factual / Credible Core</h4>
+                                <ul class="word-list" id="real-word-list">
+                                    <!-- Dynamic -->
+                                    <li class="loading-placeholder">Loading indicator words...</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Fake Indicators -->
+                            <div class="feature-col">
+                                <h4 class="col-title fake-header"><i class="fa-solid fa-triangle-exclamation"></i> Sensational / Hyperbolic</h4>
+                                <ul class="word-list" id="fake-word-list">
+                                    <!-- Dynamic -->
+                                    <li class="loading-placeholder">Loading indicator words...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: Samples -->
+            <section class="tab-content hidden" id="tab-samples">
+                <div class="samples-container">
+                    <div class="card">
+                        <h3>Quick-Test Article Library</h3>
+                        <p class="section-subtitle">Click on any sample article to load it directly into the analyzer.</p>
+                        
+                        <div class="samples-grid">
+                            <!-- Real 1 -->
+                            <div class="sample-card real" onclick="loadSample(1)">
+                                <div class="sample-badge">Real News</div>
+                                <h4>Global Climate Research Study</h4>
+                                <p class="sample-excerpt">Scientists have successfully deployed advanced marine sensors to monitor global ocean current velocities...</p>
+                                <div class="sample-footer">
+                                    <span>Source: Scientific Journal</span>
+                                    <span class="load-action">Load Text <i class="fa-solid fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                            
+                            <!-- Real 2 -->
+                            <div class="sample-card real" onclick="loadSample(2)">
+                                <div class="sample-badge">Real News</div>
+                                <h4>Central Bank Interest Rate Adjustments</h4>
+                                <p class="sample-excerpt">The Federal Reserve has officially voted to maintain baseline interest rates following an intensive review of national labor market indicators...</p>
+                                <div class="sample-footer">
+                                    <span>Source: Financial Times</span>
+                                    <span class="load-action">Load Text <i class="fa-solid fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+
+                            <!-- Fake 1 -->
+                            <div class="sample-card fake" onclick="loadSample(3)">
+                                <div class="sample-badge">Fake News</div>
+                                <h4>SHOCKING SECRET: Weather Control Towers exposed!</h4>
+                                <p class="sample-excerpt">Unbelievable government documents leaked from deep underground command bunkers confirm they are controlling storms using massive energy rays...</p>
+                                <div class="sample-footer">
+                                    <span>Source: TruthFreedomNews.net</span>
+                                    <span class="load-action">Load Text <i class="fa-solid fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+
+                            <!-- Fake 2 -->
+                            <div class="sample-card fake" onclick="loadSample(4)">
+                                <div class="sample-badge">Fake News</div>
+                                <h4>Doctors Furious! Simple Remedy Cures All Diseases</h4>
+                                <p class="sample-excerpt">Big Pharma is panicking! An anonymous researcher has discovered a rare, secret herbal liquid that completely regenerates organs overnight...</p>
+                                <div class="sample-footer">
+                                    <span>Source: RealHealthyTips.co</span>
+                                    <span class="load-action">Load Text <i class="fa-solid fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="app-footer">
+                <p>&copy; 2026 VeritasAI Fake News Detection Platform. Powered by Natural Language Processing and Scikit-learn.</p>
+                <div class="footer-links">
+                    <a href="https://github.com" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github"></i> Repository</a>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden" role="alert" aria-live="polite">
+        <i class="fa-solid fa-circle-exclamation toast-icon" id="toast-icon"></i>
+        <span class="toast-message" id="toast-message">Message here.</span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
